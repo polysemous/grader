@@ -30,6 +30,19 @@
             <input type="file" name="submission" accept=".pdf,.doc,.docx" required />
           </label>
 
+          <fieldset class="submission-type">
+            <legend>Submission Type (Optional)</legend>
+            <label class="checkbox-row">
+              <input type="checkbox" id="submission-type-discussion" />
+              Discussion
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="submission-type-discussion-reply" />
+              Discussion Reply
+            </label>
+            <p class="field-hint">Leave both unchecked if the submission is neither.</p>
+          </fieldset>
+
           <label>
             Other Supporting File (Optional: PDF, DOC, DOCX)
             <input type="file" id="other-file" name="other" accept=".pdf,.doc,.docx" />
@@ -88,20 +101,10 @@
           <h2>Grading Result</h2>
           <div id="score-pill"></div>
         </div>
+        <p id="word-count-display" class="muted-line"></p>
 
-        <p id="summary"></p>
-
-        <div class="result-grid">
-          <article>
-            <h3>Strengths</h3>
-            <ul id="strengths"></ul>
-          </article>
-
-          <article>
-            <h3>Areas to Improve</h3>
-            <ul id="improvements"></ul>
-          </article>
-        </div>
+        <h3>Deductions With Evidence</h3>
+        <div id="deductions-wrap"></div>
 
         <h3>Rubric Breakdown</h3>
         <div id="rubric-table-wrap"></div>
