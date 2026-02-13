@@ -13,6 +13,12 @@ Supported upload formats: `.pdf`, `.doc`, `.docx`
 
 - Required upload of all three grading inputs.
 - Optional fourth upload (`Other`) with required relevance explanation when used.
+- Optional submission type flags:
+  - `Discussion`: ignores reply requirements and grades only non-reply criteria.
+  - `Discussion Reply`: grades only reply-related requirements/criteria.
+  - Leave both unchecked for normal grading.
+- Word count is calculated server-side and provided to the model as an authoritative value for word-count criteria.
+- DOCX italic markers are preserved; italicization penalties are suppressed when those markers provide formatting evidence.
 - Prompt profile dropdown with useful defaults:
   - Graduate Professor
   - High School Teacher
@@ -26,9 +32,8 @@ Supported upload formats: `.pdf`, `.doc`, `.docx`
 - AI-powered grading output:
   - Points earned / points possible (example: `24/25`)
   - Letter grade
-  - Summary
-  - Strengths
-  - Areas to improve
+  - Authoritative submission word count
+  - Deduction-by-deduction evidence with exact submission locations and actionable fixes
   - Rubric breakdown table
 
 ## Setup

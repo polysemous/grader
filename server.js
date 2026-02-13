@@ -65,12 +65,35 @@ async function extractDocText(buffer) {
   }
 }
 
-async function extractTextFromFile(file) {
+function htmlToSignalText(html) {
+  let value = String(html || "");
+  value = value.replace(/<\s*(em|i)\b[^>]*>/gi, "[ITALIC]");
+  value = value.replace(/<\s*\/\s*(em|i)\s*>/gi, "[/ITALIC]");
+  value = value.replace(/<\s*br\s*\/?\s*>/gi, "\n");
+  value = value.replace(/<\s*\/\s*p\s*>/gi, "\n");
+  value = value.replace(/<[^>]+>/g, " ");
+  value = value
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  return value;
+}
+
+async function extractTextFromFile(file, options = {}) {
+  const preserveDocxFormatting = Boolean(options.preserveDocxFormatting);
   const ext = getExtension(file.originalname);
 
   if (ext === ".pdf") {
     const parsed = await pdfParse(file.buffer);
     return parsed.text;
+  }
+
+  if (ext === ".docx" && preserveDocxFormatting) {
+    const parsedHtml = await mammoth.convertToHtml({ buffer: file.buffer });
+    return htmlToSignalText(parsedHtml.value);
   }
 
   if (ext === ".docx") {
@@ -90,6 +113,58 @@ function normalizeText(text) {
     .replace(/\r/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function normalizeSubmissionType(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "discussion") {
+    return "discussion";
+  }
+  if (normalized === "discussion_reply") {
+    return "discussion_reply";
+  }
+  return "none";
+}
+
+function isReplyCriterionText(text) {
+  const value = String(text || "").toLowerCase();
+  return (
+    value.includes("reply") ||
+    value.includes("replies") ||
+    value.includes("peer response") ||
+    value.includes("response to peer") ||
+    value.includes("respond to peer") ||
+    value.includes("classmate response") ||
+    value.includes("discussion response")
+  );
+}
+
+function isItalicIssueText(text) {
+  const value = String(text || "").toLowerCase();
+  return value.includes("italic") || value.includes("italics") || value.includes("non-italic");
+}
+
+function filterBySubmissionType(items, submissionType, textAccessor) {
+  if (!Array.isArray(items) || submissionType === "none") {
+    return items || [];
+  }
+
+  return items.filter((item) => {
+    const isReply = isReplyCriterionText(textAccessor(item));
+    if (submissionType === "discussion") {
+      return !isReply;
+    }
+    if (submissionType === "discussion_reply") {
+      return isReply;
+    }
+    return true;
+  });
+}
+
+function calculateWordCount(text) {
+  const normalized = String(text || "").replace(/\[\/?ITALIC\]/g, " ");
+  const matches = normalized.match(/[A-Za-z0-9]+(?:[’'-][A-Za-z0-9]+)*/g);
+  return matches ? matches.length : 0;
 }
 
 async function ensureCustomPromptStore() {
@@ -116,20 +191,58 @@ async function writeCustomPrompts(prompts) {
   await fs.writeFile(customPromptsPath, JSON.stringify(prompts, null, 2), "utf8");
 }
 
-function buildMessages({ rubric, instructions, submission, selectedPrompt, otherContext }) {
+function buildMessages({
+  rubric,
+  instructions,
+  submission,
+  selectedPrompt,
+  otherContext,
+  submissionType,
+  submissionWordCount
+}) {
+  const modeRules =
+    submissionType === "discussion"
+      ? [
+          "Submission type is Discussion.",
+          "Ignore ALL reply/peer-response requirements in rubric and instructions.",
+          "Do not deduct for missing replies.",
+          "Set pointsPossible using only non-reply criteria."
+        ]
+      : submissionType === "discussion_reply"
+        ? [
+            "Submission type is Discussion Reply.",
+            "Grade ONLY reply/peer-response requirements and criteria.",
+            "Ignore non-reply criteria entirely.",
+            "Set pointsPossible using only reply-related criteria."
+          ]
+        : ["Submission type is Standard. Grade all criteria as provided."];
+
   const system = [
     "You are an expert academic evaluator.",
     "Grade the student submission using ONLY the provided rubric and assignment instructions.",
     "If rubric criteria are unclear, make minimal assumptions and explain them.",
+    "For every deduction, cite specific evidence from the submission using exact snippets from the text.",
+    "Evidence must be concrete, actionable, and tied to a correction.",
+    "Formatting penalties must be conservative: do not penalize italicization unless missing italics are clearly evidenced.",
     "Output valid JSON only with this exact schema:",
     "{",
     '  "pointsEarned": number,',
     '  "pointsPossible": number,',
     '  "letterGrade": string,',
-    '  "summary": string,',
-    '  "strengths": string[],',
-    '  "improvements": string[],',
-    '  "rubricBreakdown": [{ "criterion": string, "score": number, "maxScore": number, "rationale": string }]',
+    '  "rubricBreakdown": [{ "criterion": string, "score": number, "maxScore": number, "rationale": string }],',
+    '  "deductions": [{',
+    '    "criterion": string,',
+    '    "pointsLost": number,',
+    '    "reason": string,',
+    '    "actionableFix": string,',
+    '    "evidence": [{ "location": string, "snippet": string, "issue": string, "suggestion": string }]',
+    "  }],",
+    '  "citationsNeeded": [{',
+    '    "location": string,',
+    '    "claimText": string,',
+    '    "whyCitationNeeded": string,',
+    '    "suggestedCitationType": string',
+    "  }]",
     "}"
   ].join(" ");
 
@@ -142,18 +255,28 @@ function buildMessages({ rubric, instructions, submission, selectedPrompt, other
     "[Assignment Instructions]",
     instructions,
     "",
-    "[Student Submission]",
+    "[Student Submission - Original]",
     submission,
+    "",
+    `[Authoritative Submission Word Count] ${submissionWordCount}`,
     "",
     "[Additional Context]",
     otherContext || "None provided.",
     "",
     "Rules:",
     "1) Grade against rubric and instructions.",
-    "2) Give concise but specific feedback.",
+    "2) Give concise but specific feedback with exact evidence locations.",
     "3) pointsEarned must be between 0 and pointsPossible.",
-    "4) Ensure rubricBreakdown totals reasonably align with pointsEarned/pointsPossible."
-  ].join("\n");
+    "4) Ensure rubricBreakdown totals reasonably align with pointsEarned/pointsPossible.",
+    "5) Include at least one evidence item for each deduction.",
+    "5a) For grammar deductions, include exact problematic snippet(s) and clear correction guidance.",
+    "6) If citations are missing, include citationsNeeded entries showing exactly where citation is required.",
+    "7) Use the authoritative submission word count provided above. Do not re-count words yourself.",
+    "8) The submission may include [ITALIC]...[/ITALIC] markers from DOCX. Treat these as explicit italic formatting evidence.",
+    "9) Do not use line-number labels (L1, L2, etc.) in evidence locations."
+  ]
+    .concat(modeRules)
+    .join("\n");
 
   return [
     { role: "system", content: system },
@@ -233,12 +356,29 @@ function parseModelJson(content) {
   }
 }
 
+function hasMissingEvidenceForDeductions(parsed) {
+  const deductions = Array.isArray(parsed?.deductions) ? parsed.deductions : [];
+  if (deductions.length === 0) {
+    return false;
+  }
+
+  return deductions.some((deduction) => {
+    const evidence = Array.isArray(deduction?.evidence) ? deduction.evidence : [];
+    if (evidence.length === 0) {
+      return true;
+    }
+    return evidence.some((item) => !String(item?.snippet || "").trim());
+  });
+}
+
 function roundTo2(value) {
   return Math.round(value * 100) / 100;
 }
 
-function normalizePointsResult(parsed) {
-  const rubric = Array.isArray(parsed.rubricBreakdown)
+function normalizePointsResult(parsed, submissionType, submission) {
+  const hasItalicMarkers = String(submission || "").includes("[ITALIC]");
+
+  let rubric = Array.isArray(parsed.rubricBreakdown)
     ? parsed.rubricBreakdown.map((item) => ({
         criterion: String(item.criterion || "Unnamed criterion"),
         score: Number(item.score) || 0,
@@ -247,15 +387,29 @@ function normalizePointsResult(parsed) {
       }))
     : [];
 
+  rubric = filterBySubmissionType(rubric, submissionType, (item) => `${item.criterion} ${item.rationale}`);
+  rubric = rubric.map((item) => {
+    if (hasItalicMarkers && isItalicIssueText(`${item.criterion} ${item.rationale}`)) {
+      return {
+        ...item,
+        score: item.maxScore,
+        rationale: item.rationale
+          ? `${item.rationale} Italic formatting markers were detected; italicization is treated as satisfied unless explicit contrary evidence exists.`
+          : "Italic formatting markers were detected; italicization is treated as satisfied unless explicit contrary evidence exists."
+      };
+    }
+    return item;
+  });
+
   const rubricPointsEarned = rubric.reduce((sum, item) => sum + (Number.isFinite(item.score) ? item.score : 0), 0);
   const rubricPointsPossible = rubric.reduce((sum, item) => sum + (Number.isFinite(item.maxScore) ? item.maxScore : 0), 0);
 
-  let pointsPossible = Number(parsed.pointsPossible);
+  let pointsPossible = rubricPointsPossible > 0 ? rubricPointsPossible : Number(parsed.pointsPossible);
   if (!Number.isFinite(pointsPossible) || pointsPossible <= 0) {
-    pointsPossible = rubricPointsPossible > 0 ? rubricPointsPossible : 100;
+    pointsPossible = 100;
   }
 
-  let pointsEarned = Number(parsed.pointsEarned);
+  let pointsEarned = rubricPointsPossible > 0 ? rubricPointsEarned : Number(parsed.pointsEarned);
   if (!Number.isFinite(pointsEarned)) {
     const overallScore = Number(parsed.overallScore);
     if (Number.isFinite(overallScore)) {
@@ -267,6 +421,39 @@ function normalizePointsResult(parsed) {
 
   pointsEarned = Math.max(0, Math.min(pointsEarned, pointsPossible));
 
+  let deductions = Array.isArray(parsed.deductions)
+    ? parsed.deductions.map((item) => ({
+        criterion: String(item.criterion || "General"),
+        pointsLost: Number(item.pointsLost) || 0,
+        reason: String(item.reason || ""),
+        actionableFix: String(item.actionableFix || ""),
+        evidence: Array.isArray(item.evidence)
+          ? item.evidence.map((e) => ({
+              location: String(e.location || ""),
+              snippet: String(e.snippet || ""),
+              issue: String(e.issue || ""),
+              suggestion: String(e.suggestion || "")
+            }))
+          : []
+      }))
+    : [];
+  deductions = filterBySubmissionType(deductions, submissionType, (item) => `${item.criterion} ${item.reason}`);
+  if (hasItalicMarkers) {
+    deductions = deductions.filter((item) => !isItalicIssueText(`${item.criterion} ${item.reason}`));
+  }
+  deductions = deductions.filter((item) =>
+    Array.isArray(item.evidence) && item.evidence.some((evidence) => String(evidence.snippet || "").trim())
+  );
+
+  const citationsNeeded = Array.isArray(parsed.citationsNeeded)
+    ? parsed.citationsNeeded.map((item) => ({
+        location: String(item.location || ""),
+        claimText: String(item.claimText || ""),
+        whyCitationNeeded: String(item.whyCitationNeeded || ""),
+        suggestedCitationType: String(item.suggestedCitationType || "")
+      }))
+    : [];
+
   return {
     pointsEarned: roundTo2(pointsEarned),
     pointsPossible: roundTo2(pointsPossible),
@@ -274,7 +461,9 @@ function normalizePointsResult(parsed) {
     summary: String(parsed.summary || "No summary returned."),
     strengths: Array.isArray(parsed.strengths) ? parsed.strengths.map(String) : [],
     improvements: Array.isArray(parsed.improvements) ? parsed.improvements.map(String) : [],
-    rubricBreakdown: rubric
+    rubricBreakdown: rubric,
+    deductions,
+    citationsNeeded
   };
 }
 
@@ -377,6 +566,7 @@ app.post(
 
       const profile = String(req.body.promptProfile || "");
       const promptInstructions = normalizeText(req.body.promptInstructions);
+      const submissionType = normalizeSubmissionType(req.body.submissionType);
       const otherRelevance = normalizeText(req.body.otherRelevance);
 
       let selectedPrompt;
@@ -408,13 +598,14 @@ app.post(
       const [rubricText, instructionsText, submissionText, otherTextRaw] = await Promise.all([
         extractTextFromFile(rubricFile),
         extractTextFromFile(instructionsFile),
-        extractTextFromFile(submissionFile),
+        extractTextFromFile(submissionFile, { preserveDocxFormatting: true }),
         otherFile ? extractTextFromFile(otherFile) : Promise.resolve("")
       ]);
 
       const rubric = normalizeText(rubricText);
       const instructions = normalizeText(instructionsText);
       const submission = normalizeText(submissionText);
+      const submissionWordCount = calculateWordCount(submission);
       const otherText = normalizeText(otherTextRaw);
 
       if (!rubric || !instructions || !submission) {
@@ -427,13 +618,38 @@ app.post(
         ? `Reason this file is relevant: ${otherRelevance}\n\n[Other Supporting File]\n${otherText || "No readable text found in other file."}`
         : "";
 
-      const messages = buildMessages({ rubric, instructions, submission, selectedPrompt: finalPrompt, otherContext });
-      const raw = await generateGradeOutput(messages);
-      const parsed = parseModelJson(raw);
-      const normalized = normalizePointsResult(parsed);
+      const messages = buildMessages({
+        rubric,
+        instructions,
+        submission,
+        selectedPrompt: finalPrompt,
+        otherContext,
+        submissionType,
+        submissionWordCount
+      });
+      let raw = await generateGradeOutput(messages);
+      let parsed = parseModelJson(raw);
+
+      if (hasMissingEvidenceForDeductions(parsed)) {
+        const retryMessages = [
+          ...messages,
+          {
+            role: "user",
+            content:
+              "Regenerate the JSON. Every deduction must include at least one evidence item with a non-empty exact snippet from the submission."
+          }
+        ];
+        raw = await generateGradeOutput(retryMessages);
+        parsed = parseModelJson(raw);
+      }
+
+      const normalized = normalizePointsResult(parsed, submissionType, submission);
 
       res.json({
-        result: normalized
+        result: {
+          ...normalized,
+          submissionWordCount
+        }
       });
     } catch (error) {
       console.error(error);

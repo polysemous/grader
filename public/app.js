@@ -9,15 +9,16 @@ const deletePromptBtn = document.getElementById("delete-prompt-btn");
 const otherFile = document.getElementById("other-file");
 const otherRelevanceWrap = document.getElementById("other-relevance-wrap");
 const otherRelevance = document.getElementById("other-relevance");
+const submissionTypeDiscussion = document.getElementById("submission-type-discussion");
+const submissionTypeDiscussionReply = document.getElementById("submission-type-discussion-reply");
 
 const submitBtn = document.getElementById("submit-btn");
 const statusEl = document.getElementById("status");
 
 const resultsSection = document.getElementById("results");
 const scorePill = document.getElementById("score-pill");
-const summaryEl = document.getElementById("summary");
-const strengthsEl = document.getElementById("strengths");
-const improvementsEl = document.getElementById("improvements");
+const wordCountDisplay = document.getElementById("word-count-display");
+const deductionsWrap = document.getElementById("deductions-wrap");
 const rubricWrap = document.getElementById("rubric-table-wrap");
 
 const PROMPT_PREVIEWS = {
@@ -127,6 +128,22 @@ function toggleOtherRelevance() {
   otherRelevance.required = hasOtherFile;
 }
 
+function getSubmissionType() {
+  const isDiscussion = Boolean(submissionTypeDiscussion.checked);
+  const isDiscussionReply = Boolean(submissionTypeDiscussionReply.checked);
+
+  if (isDiscussion && isDiscussionReply) {
+    return "invalid";
+  }
+  if (isDiscussion) {
+    return "discussion";
+  }
+  if (isDiscussionReply) {
+    return "discussion_reply";
+  }
+  return "none";
+}
+
 async function saveCustomPrompt() {
   const name = String(savedPromptName.value || "").trim();
   const text = String(promptInstructions.value || "").trim();
@@ -195,17 +212,6 @@ async function deleteSelectedPrompt() {
   }
 }
 
-function renderList(element, items) {
-  element.innerHTML = "";
-  const values = Array.isArray(items) && items.length ? items : ["None provided."];
-
-  values.forEach((item) => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    element.appendChild(li);
-  });
-}
-
 function renderRubricTable(breakdown) {
   if (!Array.isArray(breakdown) || breakdown.length === 0) {
     rubricWrap.innerHTML = "<p>No rubric breakdown was returned.</p>";
@@ -242,6 +248,54 @@ function renderRubricTable(breakdown) {
   `;
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderDeductions(deductions) {
+  if (!Array.isArray(deductions) || deductions.length === 0) {
+    deductionsWrap.innerHTML = "<p>No specific deductions were reported.</p>";
+    return;
+  }
+
+  const cards = deductions
+    .map((item) => {
+      const evidenceItems = Array.isArray(item.evidence) && item.evidence.length > 0
+        ? item.evidence
+            .map(
+              (evidence, index) => `
+                <li>
+                  <strong>Issue #${index + 1}</strong>: "${escapeHtml(evidence.snippet)}"
+                  <br />
+                  <span>Issue: ${escapeHtml(evidence.issue)}</span>
+                  <br />
+                  <span>Fix: ${escapeHtml(evidence.suggestion)}</span>
+                </li>
+              `
+            )
+            .join("")
+        : "<li>No evidence provided.</li>";
+
+      return `
+        <article class="feedback-card">
+          <h4>${escapeHtml(item.criterion || "General")} (${Number(item.pointsLost) || 0} points lost)</h4>
+          <p><strong>Why:</strong> ${escapeHtml(item.reason || "")}</p>
+          <p><strong>Actionable fix:</strong> ${escapeHtml(item.actionableFix || "")}</p>
+          <p><strong>Specific incidents:</strong></p>
+          <ul>${evidenceItems}</ul>
+        </article>
+      `;
+    })
+    .join("");
+
+  deductionsWrap.innerHTML = `<div class="feedback-stack">${cards}</div>`;
+}
+
 promptProfile.addEventListener("change", togglePromptControls);
 otherFile.addEventListener("change", toggleOtherRelevance);
 savePromptBtn.addEventListener("click", saveCustomPrompt);
@@ -256,6 +310,13 @@ form.addEventListener("submit", async (event) => {
 
   const formData = new FormData(form);
   const promptText = String(formData.get("promptInstructions") || "").trim();
+  const submissionType = getSubmissionType();
+
+  if (submissionType === "invalid") {
+    setStatus("Select only one submission type: Discussion or Discussion Reply.", true);
+    return;
+  }
+  formData.set("submissionType", submissionType);
 
   if (!promptText) {
     setStatus("Prompt Instructions is required.", true);
@@ -286,9 +347,8 @@ form.addEventListener("submit", async (event) => {
     const result = data.result || {};
 
     scorePill.textContent = `${result.pointsEarned ?? "N/A"}/${result.pointsPossible ?? "N/A"} (${result.letterGrade ?? "N/A"})`;
-    summaryEl.textContent = result.summary || "No summary provided.";
-    renderList(strengthsEl, result.strengths);
-    renderList(improvementsEl, result.improvements);
+    wordCountDisplay.textContent = `Authoritative submission word count: ${result.submissionWordCount ?? "N/A"}`;
+    renderDeductions(result.deductions);
     renderRubricTable(result.rubricBreakdown);
 
     resultsSection.classList.remove("hidden");
