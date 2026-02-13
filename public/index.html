@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Assignment Grader</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>AI Assignment Grader</h1>
+        <p class="subtitle">
+          Upload your rubric, assignment instructions, and submission. Then choose an evaluation style and generate a grade.
+        </p>
+
+        <form id="grade-form">
+          <label>
+            Grading Rubric (PDF, DOC, DOCX)
+            <input type="file" name="rubric" accept=".pdf,.doc,.docx" required />
+          </label>
+
+          <label>
+            Assignment Instructions (PDF, DOC, DOCX)
+            <input type="file" name="instructions" accept=".pdf,.doc,.docx" required />
+          </label>
+
+          <label>
+            Student Submission (PDF, DOC, DOCX)
+            <input type="file" name="submission" accept=".pdf,.doc,.docx" required />
+          </label>
+
+          <label>
+            Other Supporting File (Optional: PDF, DOC, DOCX)
+            <input type="file" id="other-file" name="other" accept=".pdf,.doc,.docx" />
+          </label>
+
+          <label id="other-relevance-wrap" class="hidden">
+            Why is this other file relevant? (Required if uploaded)
+            <textarea
+              id="other-relevance"
+              name="otherRelevance"
+              rows="3"
+              placeholder="Example: This file contains professor-approved clarifications and grading expectations for this assignment."
+            ></textarea>
+          </label>
+
+          <label>
+            Evaluation Prompt
+            <select name="promptProfile" id="prompt-profile" required>
+              <option value="graduate_professor">Graduate Professor</option>
+              <option value="high_school_teacher">High School Teacher</option>
+              <option value="supportive_tutor">Supportive Tutor</option>
+              <option value="strict_examiner">Strict Examiner</option>
+              <option value="custom">Add your own prompt</option>
+            </select>
+          </label>
+
+          <section id="delete-prompt-wrap" class="hidden subtle-action-row">
+            <button type="button" id="delete-prompt-btn" class="subtle-btn">Delete saved prompt</button>
+          </section>
+
+          <label>
+            Prompt Instructions
+            <textarea
+              id="prompt-instructions"
+              name="promptInstructions"
+              rows="5"
+              placeholder="The selected prompt instructions appear here. You can edit for this grading run (not saved unless you explicitly save as custom prompt)."
+              required
+            ></textarea>
+          </label>
+
+          <section id="save-prompt-wrap" class="hidden save-prompt">
+            <label>
+              Save this custom prompt for future use
+              <input type="text" id="saved-prompt-name" placeholder="Prompt name (e.g., AP Lit Strict)" />
+            </label>
+            <button type="button" id="save-prompt-btn" class="secondary-btn">Save Prompt</button>
+          </section>
+
+          <button type="submit" id="submit-btn">Grade Assignment</button>
+        </form>
+      </section>
+
+      <section id="results" class="card hidden">
+        <div class="result-header">
+          <h2>Grading Result</h2>
+          <div id="score-pill"></div>
+        </div>
+
+        <p id="summary"></p>
+
+        <div class="result-grid">
+          <article>
+            <h3>Strengths</h3>
+            <ul id="strengths"></ul>
+          </article>
+
+          <article>
+            <h3>Areas to Improve</h3>
+            <ul id="improvements"></ul>
+          </article>
+        </div>
+
+        <h3>Rubric Breakdown</h3>
+        <div id="rubric-table-wrap"></div>
+      </section>
+
+      <p id="status"></p>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
