@@ -1,87 +1,46 @@
 # AI Assignment Grader
 
-A simple web app that grades a student assignment using either OpenAI or Gemini based on:
-
-1. Grading Rubric
-2. Assignment Instructions
-3. Student Submission
-4. Optional Other Supporting File (with relevance explanation)
+A local web app for assignment feedback and grading workflows using uploaded submission files, rubric/instructions context, reusable prompts, and saved reports.
 
 Supported upload formats: `.pdf`, `.doc`, `.docx`
 
-## Features
-
-- Required upload of all three grading inputs.
-- Optional fourth upload (`Other`) with required relevance explanation when used.
-- Optional submission type flags:
-  - `Discussion`: ignores reply requirements and grades only non-reply criteria.
-  - `Discussion Reply`: grades only reply-related requirements/criteria.
-  - Leave both unchecked for normal grading.
-- Word count is calculated server-side and provided to the model as an authoritative value for word-count criteria.
-- DOCX italic markers are preserved; italicization penalties are suppressed when those markers provide formatting evidence.
-- Prompt profile dropdown with useful defaults:
-  - Graduate Professor
-  - High School Teacher
-  - Supportive Tutor
-  - Strict Examiner
-  - Add your own prompt
-- Save custom prompts for future grading reuse.
-- Select saved custom prompts directly from the same evaluation dropdown.
-- Delete saved custom prompts with confirmation.
-- Single editable `Prompt Instructions` field that auto-loads selected prompt text and can be edited per grading run (not saved unless explicitly saved as a custom prompt).
-- AI-powered grading output:
-  - Points earned / points possible (example: `24/25`)
-  - Letter grade
-  - Authoritative submission word count
-  - Deduction-by-deduction evidence with exact submission locations and actionable fixes
-  - Rubric breakdown table
-
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies.
 
 ```bash
 npm install
 ```
 
-2. Create an environment file:
+2. Create your local environment file from the template.
 
 ```bash
 cp .env.example .env
 ```
 
-3. Configure provider and key in `.env`:
+3. Add your own API key values to `.env`.
 
-### Gemini (recommended if OpenAI quota is exceeded)
-
-```env
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
-PORT=3000
-```
-
-### OpenAI
-
-```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
-PORT=3000
-```
-
-4. Start the app:
+4. Start the app.
 
 ```bash
 npm start
 ```
 
-5. Open in browser:
+5. Open `http://localhost:3000`
 
-`http://localhost:3000`
+## Security and Local Data
+
+- `.env` is local-only and must never be committed.
+- Runtime app data is local-only and stored under `data/`.
+- The repository is configured to ignore `data/*.json`, which may contain:
+  - API-key settings metadata
+  - saved prompts
+  - saved reports
+  - profile data
+- If you want example configuration for collaborators, use `.env.example` rather than committing a real `.env`.
 
 ## Notes
 
-- Prompt Instructions must be filled before grading.
-- Saved prompts are stored locally in `data/custom-prompts.json`.
+- Some grading modes require rubric and instructions; grammar-only mode does not.
+- Saved prompts and reports are created locally at runtime.
 - Some legacy `.doc` files may parse imperfectly depending on source encoding; `.docx` and `.pdf` are typically more reliable.
