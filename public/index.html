@@ -8,106 +8,451 @@
   </head>
   <body>
     <main class="container">
-      <section class="card">
-        <h1>AI Assignment Grader</h1>
-        <p class="subtitle">
-          Upload your rubric, assignment instructions, and submission. Then choose an evaluation style and generate a grade.
-        </p>
+      <section class="top-sticky card">
+        <select id="student-profile-select" class="profile-select">
+          <option value="default">KC</option>
+          <option value="__add_new__">+ Add New Profile...</option>
+          <option value="__rename_profile__">Rename Current Profile...</option>
+        </select>
 
-        <form id="grade-form">
-          <label>
-            Grading Rubric (PDF, DOC, DOCX)
-            <input type="file" name="rubric" accept=".pdf,.doc,.docx" required />
-          </label>
+        <div class="tabs" role="tablist" aria-label="App sections">
+          <button type="button" id="tab-grader" class="tab-btn active" role="tab" aria-selected="true">Grader</button>
+          <button type="button" id="tab-reports" class="tab-btn" role="tab" aria-selected="false">Saved Reports</button>
+          <button type="button" id="tab-settings" class="tab-btn" role="tab" aria-selected="false">Settings</button>
+        </div>
+      </section>
 
-          <label>
-            Assignment Instructions (PDF, DOC, DOCX)
-            <input type="file" name="instructions" accept=".pdf,.doc,.docx" required />
-          </label>
+      <section id="panel-grader">
+          <section class="card">
+            <h1>AI Assignment Grader</h1>
+            <p id="grader-current-model" class="muted-line"></p>
+            <p class="subtitle">
+              Upload your rubric, assignment instructions, and submission. Then choose an evaluation style and generate a grade.
+            </p>
 
-          <label>
-            Student Submission (PDF, DOC, DOCX)
-            <input type="file" name="submission" accept=".pdf,.doc,.docx" required />
-          </label>
+            <form id="grade-form">
+              <section class="upload-two-col">
+                <label>
+                  <span>Grading Rubric</span>
+                  <div class="file-upload-control">
+                    <input
+                      type="file"
+                      id="rubric-file"
+                      class="file-upload-input"
+                      data-file-display="rubric-file-name"
+                      name="rubric"
+                      accept=".pdf,.doc,.docx"
+                    />
+                    <button type="button" class="file-upload-btn" data-file-input="rubric-file">Upload</button>
+                    <span id="rubric-file-name" class="file-upload-name">No file selected</span>
+                  </div>
+                </label>
 
-          <fieldset class="submission-type">
-            <legend>Submission Type (Optional)</legend>
-            <label class="checkbox-row">
-              <input type="checkbox" id="submission-type-discussion" />
-              Discussion
-            </label>
-            <label class="checkbox-row">
-              <input type="checkbox" id="submission-type-discussion-reply" />
-              Discussion Reply
-            </label>
-            <p class="field-hint">Leave both unchecked if the submission is neither.</p>
-          </fieldset>
+                <label>
+                  <span>Assignment Instructions</span>
+                  <div class="file-upload-control">
+                    <input
+                      type="file"
+                      id="instructions-file"
+                      class="file-upload-input"
+                      data-file-display="instructions-file-name"
+                      name="instructions"
+                      accept=".pdf,.doc,.docx"
+                    />
+                    <button type="button" class="file-upload-btn" data-file-input="instructions-file">Upload</button>
+                    <span id="instructions-file-name" class="file-upload-name">No file selected</span>
+                  </div>
+                </label>
+                <label>
+                  <span>Student Submission <span class="required-asterisk">*</span></span>
+                  <div class="file-upload-control">
+                    <input
+                      type="file"
+                      id="submission-file"
+                      class="file-upload-input"
+                      data-file-display="submission-file-name"
+                      name="submission"
+                      accept=".pdf,.doc,.docx"
+                      required
+                    />
+                    <button type="button" class="file-upload-btn" data-file-input="submission-file">Upload</button>
+                    <span id="submission-file-name" class="file-upload-name">No file selected</span>
+                  </div>
+                </label>
 
-          <label>
-            Other Supporting File (Optional: PDF, DOC, DOCX)
-            <input type="file" id="other-file" name="other" accept=".pdf,.doc,.docx" />
-          </label>
+                <label>
+                  Other Supporting File (Optional)
+                  <div class="file-upload-control">
+                    <input
+                      type="file"
+                      id="other-file"
+                      class="file-upload-input"
+                      data-file-display="other-file-name"
+                      name="other"
+                      accept=".pdf,.doc,.docx"
+                    />
+                    <button type="button" class="file-upload-btn" data-file-input="other-file">Upload</button>
+                    <span id="other-file-name" class="file-upload-name">No file selected</span>
+                  </div>
+                </label>
+              </section>
 
-          <label id="other-relevance-wrap" class="hidden">
-            Why is this other file relevant? (Required if uploaded)
-            <textarea
-              id="other-relevance"
-              name="otherRelevance"
-              rows="3"
-              placeholder="Example: This file contains professor-approved clarifications and grading expectations for this assignment."
-            ></textarea>
-          </label>
+              <fieldset class="submission-type">
+                <legend>Submission Type (Optional)</legend>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="submission-type-discussion" />
+                  Discussion
+                </label>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="submission-type-discussion-reply" />
+                  Discussion Reply
+                </label>
+                <p class="field-hint">Leave both unchecked if the submission is neither.</p>
+              </fieldset>
 
-          <label>
-            Evaluation Prompt
-            <select name="promptProfile" id="prompt-profile" required>
-              <option value="graduate_professor">Graduate Professor</option>
-              <option value="high_school_teacher">High School Teacher</option>
-              <option value="supportive_tutor">Supportive Tutor</option>
-              <option value="strict_examiner">Strict Examiner</option>
-              <option value="custom">Add your own prompt</option>
-            </select>
-          </label>
+              <fieldset class="submission-type">
+                <legend>Grading Options</legend>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="grading-option-grammar-only" />
+                  Spelling and Grammar Only
+                </label>
+                <p class="field-hint">When enabled, grading focuses only on grammar, spelling, and APA 7 feedback (no score).</p>
+              </fieldset>
+
+              <label id="other-relevance-wrap" class="hidden">
+                Why is this other file relevant? (Required if uploaded)
+                <textarea
+                  id="other-relevance"
+                  name="otherRelevance"
+                  rows="3"
+                  placeholder="Example: This file contains professor-approved clarifications and grading expectations for this assignment."
+                ></textarea>
+              </label>
+
+              <label>
+                Evaluation Prompt
+                <select name="promptProfile" id="prompt-profile" required>
+                  <option value="graduate_professor">Graduate Professor</option>
+                  <option value="professor_from_hell">Professor from Hell</option>
+                  <option value="strict_examiner">Strict Examiner</option>
+                  <option value="grammar_spelling_apa7">Grammar/Spelling/APA 7</option>
+                  <option value="create_from_feedback">Create prompt from feedback</option>
+                  <option value="custom">Add your own prompt</option>
+                </select>
+              </label>
 
           <section id="delete-prompt-wrap" class="hidden subtle-action-row">
             <button type="button" id="delete-prompt-btn" class="subtle-btn">Delete saved prompt</button>
           </section>
 
+              <label>
+                Prompt Instructions
+                <textarea
+                  id="prompt-instructions"
+                  name="promptInstructions"
+                  rows="5"
+                  placeholder="The selected prompt instructions appear here. You can edit for this grading run (not saved unless you explicitly save as custom prompt)."
+                  required
+                ></textarea>
+              </label>
+
+          <section id="save-prompt-edits-wrap" class="hidden subtle-action-row prompt-edit-action">
+            <button type="button" id="save-prompt-edits-btn" class="secondary-btn prompt-edit-btn">Save Prompt Changes</button>
+          </section>
+
+              <section id="save-prompt-wrap" class="hidden save-prompt">
+                <label>
+                  Save this custom prompt for future use
+                  <input type="text" id="saved-prompt-name" placeholder="Prompt name (e.g., AP Lit Strict)" />
+                </label>
+                <button type="button" id="save-prompt-btn" class="secondary-btn prompt-edit-btn">Save Prompt</button>
+              </section>
+
+              <button type="submit" id="submit-btn">Grade Assignment</button>
+            </form>
+          </section>
+
+          <section id="results" class="card hidden">
+            <div class="result-header">
+              <div>
+                <h2>Grading Result</h2>
+                <p id="result-model-used" class="muted-line"></p>
+              </div>
+              <div id="score-pill"></div>
+            </div>
+            <p id="word-count-display" class="muted-line"></p>
+
+            <h3>Deductions With Evidence</h3>
+            <div id="deductions-wrap"></div>
+
+            <h3>Rubric Breakdown</h3>
+            <div id="rubric-table-wrap"></div>
+
+            <h3>Save This Report</h3>
+            <div class="save-report-grid">
+              <label>
+                Report Name
+                <input type="text" id="report-name" placeholder="Suggested report name" />
+              </label>
+              <label>
+                Class Name
+                <input type="text" id="class-name" list="class-name-options" placeholder="Example: ENG 502" />
+              </label>
+              <label>
+                Professor Name
+                <input type="text" id="professor-name" list="professor-name-options" placeholder="Example: Dr. Smith" />
+              </label>
+              <label>
+                University
+                <input type="text" id="university-name" list="university-name-options" placeholder="Example: State University" />
+              </label>
+            </div>
+            <datalist id="class-name-options"></datalist>
+            <datalist id="professor-name-options"></datalist>
+            <datalist id="university-name-options"></datalist>
+            <button type="button" id="save-report-btn" class="secondary-btn">Save Feedback Report</button>
+          </section>
+
+      </section>
+
+      <section id="panel-reports" class="hidden">
+          <section class="card">
+            <h2>Saved Reports</h2>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <button type="button" class="sort-header-btn" data-sort-key="name">
+                        Report Name <span class="sort-indicator" aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-header-btn" data-sort-key="modelUsed">
+                        Model <span class="sort-indicator" aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-header-btn" data-sort-key="projectedScore">
+                        Projected <span class="sort-indicator" aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="sort-header-btn" data-sort-key="trueScore">
+                        True <span class="sort-indicator" aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                    <th>Gap</th>
+                    <th>
+                      <button type="button" class="sort-header-btn" data-sort-key="professorName">
+                        Professor <span class="sort-indicator" aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reports-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+      </section>
+
+      <section id="panel-settings" class="hidden">
+        <section class="card">
+          <h2>Settings</h2>
+          <p class="field-hint">Select the model for grading and provide the API key used to authenticate.</p>
+          <p class="field-hint">This dropdown shows grading-focused models (Gemini plus OpenRouter free models filtered for grading quality).</p>
+          <p id="active-llm-model" class="active-setting-line"></p>
+
+          <div class="settings-model-row">
+            <label class="settings-model-label">
+              Model
+              <select id="llm-model-select"></select>
+            </label>
+            <button type="button" id="test-llm-model-btn" class="secondary-btn settings-test-btn">Test Selected Model</button>
+          </div>
+
           <label>
-            Prompt Instructions
+            API Key
+            <input type="password" id="llm-api-key-input" placeholder="Enter API key" autocomplete="off" />
+          </label>
+          <p id="llm-key-hint" class="field-hint"></p>
+          <p id="settings-test-status" class="field-hint"></p>
+          <button type="button" id="save-llm-settings-btn" class="secondary-btn settings-save-btn">Save LLM Settings</button>
+          <p id="settings-status" class="field-hint"></p>
+
+          <hr />
+          <label>
+            Grading Timeout (seconds)
+            <input type="number" id="grader-timeout-seconds-input" min="5" max="300" step="1" />
+          </label>
+          <button type="button" id="save-grader-timeout-btn" class="secondary-btn settings-save-btn">Save Grader Timeout</button>
+          <p id="grader-timeout-status" class="field-hint"></p>
+        </section>
+      </section>
+
+      <section id="report-viewer" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card card">
+          <div class="modal-header">
+            <h2 id="viewer-title">Saved Report</h2>
+            <div class="modal-actions">
+              <button type="button" id="close-viewer-btn" class="secondary-btn close-modal-btn">Close</button>
+            </div>
+          </div>
+          <p id="viewer-meta" class="muted-line"></p>
+          <section id="outcome-comparison" class="comparison-wrap hidden">
+            <article class="comparison-block">
+              <h3>True Grade and Feedback</h3>
+              <p id="true-score-display" class="muted-line"></p>
+              <p id="true-feedback-display"></p>
+            </article>
+            <article class="comparison-block">
+              <h3>Predicted Grade and Feedback (AI)</h3>
+              <p id="predicted-score-display" class="muted-line"></p>
+              <div id="predicted-feedback-display"></div>
+            </article>
+          </section>
+          <p id="predicted-note" class="field-hint">
+            Note: The sections below are AI-predicted grading outputs, not the professor's actual grading.
+          </p>
+          <div id="viewer-score" class="score-block"></div>
+          <h3>Predicted Deductions With Evidence (AI)</h3>
+          <div id="viewer-deductions"></div>
+          <h3>Predicted Rubric Breakdown (AI)</h3>
+          <div id="viewer-rubric"></div>
+
+        </div>
+      </section>
+
+      <section id="regrade-dialog" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card card regrade-dialog-card">
+          <div class="modal-header">
+            <h3>Re-Grade Saved Report</h3>
+            <button type="button" id="close-regrade-dialog-btn" class="secondary-btn close-modal-btn">Close</button>
+          </div>
+          <p class="field-hint">
+            This reuses saved rubric, assignment instructions, and prompt settings. Upload only the updated submission.
+          </p>
+          <label>
+            Updated Student Submission
+            <div class="file-upload-control">
+              <input
+                type="file"
+                id="regrade-submission-file"
+                class="file-upload-input"
+                data-file-display="regrade-submission-file-name"
+                accept=".pdf,.doc,.docx"
+              />
+              <button type="button" class="file-upload-btn" data-file-input="regrade-submission-file">Upload</button>
+              <span id="regrade-submission-file-name" class="file-upload-name">No file selected</span>
+            </div>
+          </label>
+          <button type="button" id="regrade-btn" class="secondary-btn">Grade Again and Replace Report</button>
+        </div>
+      </section>
+
+      <section id="actual-outcome-dialog" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card card regrade-dialog-card">
+          <div class="modal-header">
+            <h3>Record True Professor Outcome</h3>
+            <button type="button" id="close-actual-outcome-dialog-btn" class="secondary-btn close-modal-btn">Close</button>
+          </div>
+          <p class="field-hint">
+            After receiving the real grade, save it here.
+          </p>
+          <label>
+            True Score (example: 22/25)
+            <input type="text" id="actual-score-input" placeholder="Example: 22/25" />
+          </label>
+          <label>
+            Professor Feedback (actual feedback from instructor)
             <textarea
-              id="prompt-instructions"
-              name="promptInstructions"
-              rows="5"
-              placeholder="The selected prompt instructions appear here. You can edit for this grading run (not saved unless you explicitly save as custom prompt)."
-              required
+              id="actual-feedback-input"
+              rows="4"
+              placeholder="Paste the professor's real feedback here."
+            ></textarea>
+          </label>
+          <button type="button" id="save-actual-btn" class="secondary-btn">
+            Save True Outcome
+          </button>
+        </div>
+      </section>
+
+      <section id="prompt-builder-dialog" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card card prompt-builder-card">
+          <div class="modal-header">
+            <h3>Create Prompt From Feedback</h3>
+            <button type="button" id="close-prompt-builder-dialog-btn" class="secondary-btn close-modal-btn">Close</button>
+          </div>
+          <p id="prompt-builder-model" class="muted-line"></p>
+          <label>
+            Professor
+            <select id="prompt-builder-professor-select">
+              <option value="">Select professor...</option>
+            </select>
+          </label>
+
+          <h4>Received Feedback</h4>
+          <div class="table-wrap prompt-builder-feedback-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    Use
+                    <label class="checkbox-row prompt-builder-select-all">
+                      <input type="checkbox" id="prompt-builder-select-all-feedback" />
+                      All
+                    </label>
+                  </th>
+                  <th>Report</th>
+                  <th>Class</th>
+                  <th>True Score</th>
+                  <th>Professor Feedback</th>
+                </tr>
+              </thead>
+              <tbody id="prompt-builder-feedback-body">
+                <tr>
+                  <td colspan="5">Select a professor to load feedback.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <label>
+            Original Saved Prompt
+            <select id="prompt-builder-original-prompt-select">
+              <option value="">Select saved prompt...</option>
+            </select>
+          </label>
+          <label>
+            Original Prompt (Full Text)
+            <textarea
+              id="prompt-builder-original-prompt-text"
+              rows="7"
+              readonly
+              placeholder="Select an original prompt to view full text."
             ></textarea>
           </label>
 
-          <section id="save-prompt-wrap" class="hidden save-prompt">
-            <label>
-              Save this custom prompt for future use
-              <input type="text" id="saved-prompt-name" placeholder="Prompt name (e.g., AP Lit Strict)" />
-            </label>
-            <button type="button" id="save-prompt-btn" class="secondary-btn">Save Prompt</button>
-          </section>
+          <label>
+            Build New Prompt Instructions
+            <textarea id="prompt-builder-instructions" rows="6"></textarea>
+          </label>
 
-          <button type="submit" id="submit-btn">Grade Assignment</button>
-        </form>
-      </section>
+          <button type="button" id="prompt-builder-build-btn" class="secondary-btn prompt-edit-btn">Build Prompt</button>
+          <p id="prompt-builder-status" class="field-hint"></p>
 
-      <section id="results" class="card hidden">
-        <div class="result-header">
-          <h2>Grading Result</h2>
-          <div id="score-pill"></div>
+          <label>
+            Generated Prompt
+            <textarea id="prompt-builder-output" rows="8" placeholder="Generated prompt will appear here."></textarea>
+          </label>
+          <label>
+            Save Prompt Name
+            <input type="text" id="prompt-builder-save-name" placeholder="Generated prompt name" />
+          </label>
+          <button type="button" id="prompt-builder-save-btn" class="secondary-btn prompt-edit-btn" disabled>Save Generated Prompt</button>
         </div>
-        <p id="word-count-display" class="muted-line"></p>
-
-        <h3>Deductions With Evidence</h3>
-        <div id="deductions-wrap"></div>
-
-        <h3>Rubric Breakdown</h3>
-        <div id="rubric-table-wrap"></div>
       </section>
 
       <p id="status"></p>

@@ -23,9 +23,59 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 1rem 2rem;
+  padding: 0 1.25rem 2rem;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.top-sticky {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  position: sticky;
+  top: 0.75rem;
+  z-index: 40;
+  backdrop-filter: blur(6px);
+}
+
+.top-sticky.card {
+  padding: 0.4rem 0.65rem;
+}
+
+.profile-select {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.tab-btn {
+  width: auto;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  background: #edf3f6;
+  border: 1px solid #c8d6df;
+  color: #12364a;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.tab-btn:hover:not(:disabled) {
+  background: #dbe8ef;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .card {
@@ -61,10 +111,60 @@ form {
   gap: 0.95rem;
 }
 
+.upload-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.95rem;
+}
+
 label {
   font-weight: 600;
   display: grid;
   gap: 0.35rem;
+}
+
+.required-asterisk {
+  color: #c11616;
+  font-weight: 800;
+}
+
+.file-upload-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.file-upload-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.file-upload-btn {
+  width: auto;
+  margin: 0;
+  padding: 0.4rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid #0a4a50;
+  background: linear-gradient(135deg, #0d5c63, #17818a);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 6px rgba(13, 92, 99, 0.18);
+}
+
+.file-upload-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0b4f55, #116e76);
+}
+
+.file-upload-name {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.25;
 }
 
 .submission-type {
@@ -139,6 +239,142 @@ button:disabled {
   gap: 0.6rem;
 }
 
+.save-report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.library-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.settings-save-btn {
+  width: auto;
+  justify-self: start;
+}
+
+.settings-model-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.settings-model-label {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.settings-test-btn {
+  width: auto;
+  padding: 0.7rem 0.75rem;
+  font-size: 1rem;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.active-setting-line {
+  margin: 0.2rem 0 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #c8d6df;
+  border-radius: 8px;
+  background: #f7fbfd;
+  font-weight: 700;
+}
+
+.table-open-btn {
+  width: auto;
+  padding: 0.4rem 0.65rem;
+}
+
+.table-actions {
+  white-space: nowrap;
+  position: relative;
+}
+
+.table-delete-btn {
+  width: auto;
+  margin-left: 0.4rem;
+}
+
+.row-actions-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.row-actions-trigger {
+  width: auto;
+  min-width: 2rem;
+  height: 1.85rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.row-actions-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.row-actions-trigger::marker {
+  content: "";
+}
+
+.row-actions-panel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  min-width: 10.2rem;
+  background: #fff;
+  border: 1px solid #c8d6df;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(6, 35, 50, 0.14);
+  padding: 0.25rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.row-action-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #16313f;
+  font-weight: 600;
+  font-size: 0.84rem;
+  padding: 0.38rem 0.5rem;
+}
+
+.row-action-item:hover:not(:disabled) {
+  background: #edf3f6;
+}
+
+.row-action-item:disabled {
+  opacity: 0.55;
+}
+
+.row-action-delete {
+  color: #8b2e2e;
+}
+
+.row-action-delete:hover:not(:disabled) {
+  background: #fbe9e9;
+}
+
+.score-block {
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
 .secondary-btn {
   background: #edf3f6;
   border: 1px solid #c8d6df;
@@ -151,6 +387,17 @@ button:disabled {
 
 .subtle-action-row {
   margin-top: -0.2rem;
+}
+
+.prompt-edit-action {
+  margin-top: -0.1rem;
+}
+
+.prompt-edit-btn {
+  width: auto;
+  justify-self: start;
+  padding: 0.42rem 0.7rem;
+  font-size: 0.9rem;
 }
 
 .subtle-btn {
@@ -183,6 +430,69 @@ button:disabled {
   color: #223744;
   line-height: 1.45;
   white-space: pre-wrap;
+}
+
+.regrade-wrap {
+  margin-top: 1rem;
+  border-top: 1px dashed var(--border);
+  padding-top: 0.8rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 26, 35, 0.46);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--card);
+  padding: 0.1rem 0 0.6rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.6rem;
+}
+
+.close-modal-btn {
+  width: auto;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.regrade-dialog-card {
+  width: min(620px, 96vw);
+}
+
+.prompt-builder-card {
+  width: min(1000px, 96vw);
+}
+
+.prompt-builder-feedback-table-wrap {
+  max-height: 300px;
+  overflow: auto;
+}
+
+.prompt-builder-select-all {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
 }
 
 .result-header {
@@ -248,10 +558,142 @@ th {
   background: #eff4f7;
 }
 
+.sort-header-btn {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.sort-header-btn:hover:not(:disabled) {
+  background: transparent;
+  color: #0a4a50;
+}
+
+.sort-header-btn.active {
+  color: #0a4a50;
+}
+
+.sort-indicator {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.class-group-row td {
+  background: #eef4f8;
+  font-weight: 700;
+}
+
+.group-toggle-btn {
+  width: auto;
+  margin: 0 0.4rem 0 0;
+  padding: 0.05rem 0.15rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  background: transparent;
+  color: #20485c;
+  border: 1px solid transparent;
+  box-shadow: none;
+  line-height: 1;
+}
+
+.group-toggle-btn:hover:not(:disabled) {
+  background: #dfeaf1;
+}
+
+.group-caret {
+  display: inline-block;
+  transform: translateY(-0.5px);
+}
+
+.group-label {
+  vertical-align: middle;
+}
+
+.gap-pill {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.gap-exact {
+  background: #e5f7ef;
+  border-color: #b7e3cc;
+  color: #1b6e49;
+}
+
+.gap-close {
+  background: #fff7e5;
+  border-color: #f1d798;
+  color: #7b5c15;
+}
+
+.gap-far {
+  background: #fbe9e9;
+  border-color: #efc1c1;
+  color: #8b2e2e;
+}
+
+.gap-na {
+  background: #edf3f6;
+  border-color: #d2dde4;
+  color: #4c5f6b;
+}
+
+.comparison-wrap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  background: #fafcfd;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.comparison-block h3 {
+  margin: 0 0 0.35rem;
+}
+
+.comparison-block p {
+  margin: 0.2rem 0;
+}
+
 #status {
-  min-height: 1.5rem;
-  margin: 0.8rem 0;
+  margin: 0.5rem 0;
   font-weight: 600;
+}
+
+#status:empty {
+  display: none;
+}
+
+#settings-status:empty {
+  display: none;
+}
+
+#settings-test-status:empty {
+  display: none;
+}
+
+#grader-timeout-status:empty {
+  display: none;
+}
+
+#prompt-builder-status:empty {
+  display: none;
 }
 
 .hidden {
@@ -263,12 +705,39 @@ th {
 }
 
 @media (max-width: 700px) {
+  .top-sticky {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .upload-two-col {
+    grid-template-columns: 1fr;
+  }
+
   .result-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-model-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-test-btn {
+    align-self: flex-start;
   }
 
   .result-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .save-report-grid,
+  .library-controls {
+    grid-template-columns: 1fr;
   }
 }
